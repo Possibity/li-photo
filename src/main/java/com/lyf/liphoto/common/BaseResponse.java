@@ -5,6 +5,11 @@ import lombok.Data;
 
 import java.io.Serializable;
 
+/**
+ * 通用返回类，返回给前端
+ * @param <T>
+ */
+
 @Data
 public class BaseResponse<T> implements Serializable {
 

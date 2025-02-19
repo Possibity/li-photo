@@ -2,6 +2,9 @@ package com.lyf.liphoto.common;
 
 import com.lyf.liphoto.exception.ErrorCode;
 
+/**
+ * 响应工具类
+ */
 public class ResultUtils {
 
     /**
