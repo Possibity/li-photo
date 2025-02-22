@@ -10,12 +10,10 @@ import com.lyf.liphoto.constant.UserConstant;
 import com.lyf.liphoto.exception.BusinessException;
 import com.lyf.liphoto.exception.ErrorCode;
 import com.lyf.liphoto.exception.ThrowUtils;
-import com.lyf.liphoto.model.dto.picture.PictureEditRequest;
-import com.lyf.liphoto.model.dto.picture.PictureQueryRequest;
-import com.lyf.liphoto.model.dto.picture.PictureUpdateRequest;
-import com.lyf.liphoto.model.dto.picture.PictureUploadRequest;
+import com.lyf.liphoto.model.dto.picture.*;
 import com.lyf.liphoto.model.entity.Picture;
 import com.lyf.liphoto.model.entity.User;
+import com.lyf.liphoto.model.vo.PictureTagCategory;
 import com.lyf.liphoto.model.vo.PictureVO;
 import com.lyf.liphoto.service.PictureService;
 import com.lyf.liphoto.service.UserService;
@@ -25,7 +23,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * ClassName:PictureController
@@ -111,7 +111,7 @@ public class PictureController {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
         // 查询数据库
         Picture picture = pictureService.getById(id);
-        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
+        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR,"没有此id的图片");
         // 获取封装类
         return ResultUtils.success(picture);
     }
@@ -186,5 +186,13 @@ public class PictureController {
         boolean result = pictureService.updateById(picture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
+    }
+    public BaseResponse<PictureTagCategory> listPictureTagCategory(){
+        PictureTagCategory pictureTagCategory = new PictureTagCategory();
+        List<String> tagList= Arrays.asList("热门", "搞笑", "生活", "高清", "艺术", "校园", "背景", "简历", "创意");
+        List<String> categoryList = Arrays.asList("模板", "电商", "表情包", "素材", "海报");
+        pictureTagCategory.setTagList(tagList);
+        pictureTagCategory.setCategoryList(categoryList);
+        return ResultUtils.success(pictureTagCategory);
     }
 }
