@@ -6,19 +6,23 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lyf.liphoto.exception.BusinessException;
 import com.lyf.liphoto.exception.ErrorCode;
 import com.lyf.liphoto.exception.ThrowUtils;
 import com.lyf.liphoto.manager.FileManager;
 import com.lyf.liphoto.model.dto.file.UploadPictureResult;
 import com.lyf.liphoto.model.dto.picture.PictureQueryRequest;
+import com.lyf.liphoto.model.dto.picture.PictureReviewRequest;
 import com.lyf.liphoto.model.dto.picture.PictureUploadRequest;
 import com.lyf.liphoto.model.entity.Picture;
 import com.lyf.liphoto.model.entity.User;
+import com.lyf.liphoto.model.enums.PictureReviewStatusEnum;
 import com.lyf.liphoto.model.vo.PictureVO;
 import com.lyf.liphoto.model.vo.UserVO;
 import com.lyf.liphoto.service.PictureService;
 import com.lyf.liphoto.mapper.PictureMapper;
 import com.lyf.liphoto.service.UserService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -185,6 +189,31 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (StrUtil.isNotBlank(introduction)) {
             ThrowUtils.throwIf(introduction.length() > 800, ErrorCode.PARAMS_ERROR, "简介过长");
         }
+    }
+
+    @Override
+    public void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser) {
+        Long id=pictureReviewRequest.getId();
+        Integer reviewStatus = pictureReviewRequest.getReviewStatus();
+        //获取状态枚举信息
+        PictureReviewStatusEnum reviewStatusEnum = PictureReviewStatusEnum.getEnumByValue(reviewStatus);
+        if(id==null||reviewStatusEnum==null||PictureReviewStatusEnum.REVIEWING.equals(reviewStatusEnum)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //判断是否存在
+        Picture oldPicture = this.getById(id);
+        ThrowUtils.throwIf(oldPicture==null,ErrorCode.NOT_FOUND_ERROR);
+        //已是该状态
+        if(oldPicture.getReviewStatus().equals(reviewStatus)){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"请勿重复审核");
+        }
+        //更新审核状态
+        Picture updatePicture = new Picture();
+        BeanUtils.copyProperties(pictureReviewRequest,updatePicture);
+        updatePicture.setReviewerId(loginUser.getId());
+        updatePicture.setReviewTime(new Date());
+        boolean result = this.updateById(updatePicture);
+        ThrowUtils.throwIf(!result,ErrorCode.OPERATION_ERROR);
     }
 }
 
