@@ -32,7 +32,7 @@ public interface PictureService extends IService<Picture> {
                             User loginUser);
 
     /**
-     * 查询请求
+     * 获取查询对象
      * @param pictureQueryRequest 请求体转为QueryWrapper对象
      * @return
      */
@@ -68,4 +68,10 @@ public interface PictureService extends IService<Picture> {
      */
     void doPictureReview(PictureReviewRequest pictureReviewRequest, User loginUser);
 
+    /**
+     * 根据用户角色给图片对象补充填充审核字段的值
+     * @param picture
+     * @param loginUser
+     */
+    public void fillReviewParams(Picture picture,User loginUser);
 }
