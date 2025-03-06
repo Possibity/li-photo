@@ -10,6 +10,9 @@ import com.lyf.liphoto.exception.BusinessException;
 import com.lyf.liphoto.exception.ErrorCode;
 import com.lyf.liphoto.exception.ThrowUtils;
 import com.lyf.liphoto.manager.FileManager;
+import com.lyf.liphoto.manager.upload.FilePictureUpload;
+import com.lyf.liphoto.manager.upload.PictureUploadTemplate;
+import com.lyf.liphoto.manager.upload.UrlPictureUpload;
 import com.lyf.liphoto.model.dto.file.UploadPictureResult;
 import com.lyf.liphoto.model.dto.picture.PictureQueryRequest;
 import com.lyf.liphoto.model.dto.picture.PictureReviewRequest;
@@ -43,11 +46,13 @@ import java.util.stream.Collectors;
 public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
     implements PictureService{
     @Resource
-    private FileManager fileManager;
+    private FilePictureUpload filePictureUpload;
+    @Resource
+    private UrlPictureUpload urlPictureUpload;
     @Resource
     private UserService userService;
     @Override
-    public PictureVO uploadPicture(MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest, User loginUser) {
+    public PictureVO uploadPicture(Object inputSource, PictureUploadRequest pictureUploadRequest, User loginUser) {
         ThrowUtils.throwIf(loginUser==null, ErrorCode.NO_AUTH_ERROR);
         //用于判断是新增还是更新照片
         Long pictureId=null;
@@ -66,7 +71,12 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         //上传图片，得到信息
         //按照用户id划分目录
         String uploadPathPrefix = String.format("public/%s", loginUser.getId());
-        UploadPictureResult uploadPictureResult = fileManager.uploadPicture(multipartFile, uploadPathPrefix);
+        // 根据 inputSource 类型区分上传方式
+        PictureUploadTemplate pictureUploadTemplate = filePictureUpload;
+        if (inputSource instanceof String) {
+            pictureUploadTemplate = urlPictureUpload;
+        }
+        UploadPictureResult uploadPictureResult = pictureUploadTemplate.uploadPicture(inputSource, uploadPathPrefix);
         //构造要入库的图片信息
         Picture picture = new Picture();
         picture.setUrl(uploadPictureResult.getUrl());
